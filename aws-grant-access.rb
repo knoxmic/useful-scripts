@@ -9,8 +9,6 @@ Dotenv.load
 require 'aws-sdk'
 require 'ipaddress'
 
-require 'pry'
-
 if ARGV.length != 1
   puts "Usage:-"
   puts "  ruby aws-grant-access.rb <security_group_name>"

@@ -9,13 +9,15 @@ Dotenv.load
 require 'aws-sdk'
 require 'ipaddress'
 
-if ARGV.length != 1
+if ARGV.length != 3
   puts "Usage:-"
-  puts "  ruby aws-grant-access.rb <security_group_name>"
+  puts "  ruby aws-grant-access.rb <aws_region> <security_group_id> <ssh_port>"
   exit
 end
 
-group_name = ARGV.join
+region_name = ARGV[0]
+group_id = ARGV[1]
+ssh_port = ARGV[2].to_i
 
 def revoke_ingress(ec2_client, sg_id, port, cidr_ip)
   ec2_client.revoke_security_group_ingress(
@@ -53,15 +55,15 @@ def authorize_ingress(ec2_client, sg_id, port, cidr_ip)
   )
 end
 
-ec2_client = Aws::EC2::Client.new
+ec2_client = Aws::EC2::Client.new(region: region_name)
 
 group_results = ec2_client.describe_security_groups({
-  group_names: [group_name]
+  group_ids: [group_id]
 })
 
 security_group = group_results.security_groups.first
 security_group.ip_permissions.each do |permission|
-  next if not permission.from_port == 22 && permission.to_port == 22
+  next if not permission.from_port == ssh_port && permission.to_port == ssh_port
 
   old_ip = permission.ip_ranges.first.cidr_ip
   new_ip = `curl -s http://ipecho.net/plain`
